@@ -1,0 +1,15 @@
+
+          <div class="col-sm">
+            <label class="control-label">
+              <small>
+                {% if field.errors %}
+                  {% for error in field.errors %}
+                    <div class="bg-danger text-white">{{ error|safe }}</div>
+                  {% endfor %}
+                {% else %}
+                  {{ field.label }}
+                {% endif %}
+              </small>
+            </label>
+            <input type="text" class="form-control" name="{{ field.name }}" value="{{ field.value }}">
+          </div>

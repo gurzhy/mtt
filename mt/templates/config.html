@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  mt
+{% endblock %}
+
+{% block content %}
+
+
+        <div class="row shadow p-4 mb-4 bg-white">
+          <pre>
+
+# логин провайдера: {{ context.isp_login }}
+# пароль провайдера: {{ context.isp_passwd }}
+
+# wifi сеть: {{ context.wifi_name }}
+# wifi пароль: {{ context.wifi_passwd }}
+
+# ip/mask: {{ context.ip }}/{{ context.mask }}
+# gw: {{ context.gw }}
+
+# логин клиента: {{ context.client_login }}
+# роутер-пароль: {{ context.client_passwd }}
+          </pre>
+        </div>
+
+        <a href="{% url "index" %}" class="btn btn-outline-dark" role="button" >в начало</a>
+
+        <div class="row">        
+          <pre>
+
+/user 
+  add name={{ context.isp_login }} password={{ context.isp_passwd }} group=full comment="ISP"
+  remove admin
+  add name={{context.client_login}} password={{context.client_passwd}} group=full comment="Client"
+
+/interface bridge
+  add comment=LAN name=bridge-LAN protocol-mode=none
+
+/interface wireless
+  set [ find default-name=wlan1 ] band=2ghz-b/g/n country=russia3 \
+  disabled=no distance=indoors \
+  frequency=auto mode=ap-bridge ssid={{ context.wifi_name }} wireless-protocol=802.11 \
+  wps-mode=disabled
+  set [ find default-name=wlan2 ] band=5ghz-n/ac country=russia3 \
+  disabled=no distance=indoors \
+  frequency=auto mode=ap-bridge ssid={{ context.wifi_name }} wireless-protocol=802.11 \
+  wps-mode=disabled    
+
+/interface wireless security-profiles
+set [ find default=yes ] authentication-types=wpa2-psk eap-methods="" \
+  group-key-update=1h mode=dynamic-keys supplicant-identity=MikroTik \
+  wpa2-pre-shared-key={{ context.wifi_passwd }}
+
+/interface ethernet
+  set [ find default-name=ether1 ] comment=WAN
+
+/interface wireless security-profiles
+  set [ find default=yes ] authentication-types=wpa2-psk eap-methods="" \
+  group-key-update=1h mode=dynamic-keys supplicant-identity=MikroTik \
+  wpa2-pre-shared-key={{ context.wifi_passwd }}
+
+/ip dhcp-server config
+  set store-leases-disk=never
+
+/ip pool
+  add name=dhcp_pool0 ranges=192.168.100.10-192.168.100.254
+
+/ip dhcp-server
+  add address-pool=dhcp_pool0 disabled=no interface=bridge-LAN lease-time=1d \
+  name=dhcp1
+
+/interface bridge port
+  add bridge=bridge-LAN interface=wlan1
+  add bridge=bridge-LAN interface=wlan2
+  add bridge=bridge-LAN interface=ether2
+  add bridge=bridge-LAN interface=ether3
+  add bridge=bridge-LAN interface=ether4
+  add bridge=bridge-LAN interface=ether5
+
+/ip address
+  add address={{ context.ip }}/{{ context.mask }} interface=ether1
+  add address=192.168.100.1/24 interface=bridge-LAN network=192.168.100.0
+
+/ip dhcp-server network
+  add address=192.168.100.0/24 gateway=192.168.100.1
+
+/ip dns
+  set servers=8.8.8.8,1.1.1.1
+
+/ip firewall address-list
+  add address=89.221.63.0/24 list=backBone
+  add address=10.0.0.0/8 list=backBone
+  add address=192.168.0.0/16 list=backBone
+
+/ip firewall filter
+  add action=passthrough chain=input comment="=== CLOSE ME ==="
+  add action=accept chain=input comment="established + related" \
+  connection-state=established,related
+  add action=accept chain=input comment="allow icmp" protocol=icmp
+  add action=accept chain=input comment=backBone src-address-list=backBone
+  add action=drop chain=input comment="drop other"
+  add action=passthrough chain=forward comment="=== FORWARD ==="
+  add action=accept chain=forward comment="established + related" \
+  connection-state=established,related
+  add action=drop chain=forward comment="drop other from WAN side" \
+  in-interface=ether1
+
+/ip firewall nat
+  add action=masquerade chain=srcnat comment=NAT out-interface=ether1
+
+/ip firewall service-port
+  set sip disabled=yes
+
+/ip route
+  add distance=1 gateway={{ context.gw }}
+
+/ip service
+  set telnet disabled=yes
+  set ftp disabled=yes
+  set www disabled=yes
+  set api disabled=yes
+  set api-ssl disabled=yes
+
+/system clock
+  set time-zone-name=Europe/Moscow
+
+/system identity
+  set name={{ context.identity }}
+
+/system ntp client
+  set enabled=yes primary-ntp=207.148.72.47 secondary-ntp=91.207.136.55
+
+          </pre>
+        </div>        
+
+
+{% endblock %}

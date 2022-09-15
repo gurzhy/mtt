@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  mt
+{% endblock %}
+
+{% block content %}
+
+      <form class="form-horizontal" method="POST">
+
+        {% csrf_token %}
+
+        <div class="row shadow p-4 mb-4 bg-white">
+          {% with field=form.identity %}{% include "includes/field.html" %}{% endwith %}
+          {% with field=form.ip %}{% include "includes/field.html" %}{% endwith %}
+        </div>  
+
+        <div class="row shadow p-4 mb-4 bg-white">
+          {% with field=form.mask %}{% include "includes/field.html" %}{% endwith %}  
+          {% with field=form.gw %}{% include "includes/field.html" %}{% endwith %}                    
+        </div>
+
+        <div class="row shadow p-4 mb-4 bg-white">
+          {% with field=form.wifi_name %}{% include "includes/field.html" %}{% endwith %}
+          {% with field=form.wifi_passwd %}{% include "includes/field.html" %}{% endwith %}
+        </div>
+
+        <div class="row shadow p-4 mb-4 bg-white">
+          {% with field=form.client_login %}{% include "includes/field.html" %}{% endwith %}
+          {% with field=form.client_passwd %}{% include "includes/field.html" %}{% endwith %}
+        </div>
+
+        <div class="row shadow p-4 mb-4 bg-white">
+          {% with field=form.isp_login %}{% include "includes/field.html" %}{% endwith %}
+          {% with field=form.isp_passwd %}{% include "includes/field.html" %}{% endwith %}
+        </div>        
+
+        <div class="row">
+          <div class="col-sm">
+            <p>
+            <input type="submit" class="btn btn-outline-dark" value="Сформировать конфигурацию">
+            <a href="{% url "index" %}" class="btn btn-outline-dark" role="button" >сбросить</a>
+            </p>
+          </div>
+        </div>
+
+      </form>
+
+
+{% endblock %}
